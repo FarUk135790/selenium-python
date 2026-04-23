@@ -1,0 +1,62 @@
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+class TestSocialMediaLinks(unittest.TestCase):
+
+    def setUp(self):
+        self.driver = webdriver.Chrome()
+        self.driver.maximize_window()
+        self.wait = WebDriverWait(self.driver, 10)
+        self.driver.get("https://www.greencity.cx.ua/#/greenCity/events")
+
+    def test_social_media_redirect(self):
+        driver = self.driver
+
+        # Step 1: Скрол вниз
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        # Перевірка: іконки є
+        social_icons = self.wait.until(
+            EC.presence_of_all_elements_located((
+                By.XPATH,
+                "/html/body/app-root/app-main/div/div[2]/app-greencity-main/app-footer/footer/div/div[1]/nav/ul[2]/li[2]/a"
+            ))
+        )
+        self.assertTrue(len(social_icons) > 0, "Соціальні іконки не знайдені")
+
+        # Запам’ятати кількість вкладок
+        tabs_before = len(driver.window_handles)
+
+        # Step 2: Клік по <a>
+        first_icon = self.wait.until(
+            EC.element_to_be_clickable((
+                By.XPATH,
+                "/html/body/app-root/app-main/div/div[2]/app-greencity-main/app-footer/footer/div/div[1]/nav/ul[2]/li[2]/a"
+            ))
+        )
+        first_icon.click()
+
+        # Очікування нової вкладки
+        self.wait.until(lambda d: len(d.window_handles) > tabs_before)
+
+        # Переключення
+        driver.switch_to.window(driver.window_handles[-1])
+
+        # Перевірка
+        current_url = driver.current_url
+        self.assertNotIn(
+            "https://www.greencity.cx.ua/#/ubs",
+            current_url,
+            "Відкривається неправильна сторінка"
+        )
+
+    def tearDown(self):
+        self.driver.quit()
+
+
+if __name__ == "__main__":
+    unittest.main()
